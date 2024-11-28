@@ -78,7 +78,7 @@ const DisplayAndUpdateDatabase = () => {
             applicatorID: tempData.uid, // 新規 UID を設定
             nickName: tempData.nickName || "Unknown", // デフォルト値を設定
             projectID: tempData.projID, // プロジェクト ID
-            status: "pending", // 初期ステータス
+            status: "open", // 初期ステータス
           };
 
           await update(applicationRef, initialData);
