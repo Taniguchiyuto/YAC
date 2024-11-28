@@ -41,4 +41,5 @@ next-env.d.ts
 
 # Environment variables
 .env.local
- config/service-account.json
+
+config/service-account.json
