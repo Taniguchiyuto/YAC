@@ -108,9 +108,8 @@ export default function ActiveProjectsPage() {
   const projectsWithinOneWeek = projects.filter((project) => {
     const deliveryDate = new Date(project.deliveryDate); //deliveryDateをDataオブジェクトに変換
     return (
-      deliveryDate >= today &&
-      deliveryDate <= oneWeekFromNow &&
-      project.finalMan == "未定"
+      // deliveryDate >= today &&
+      deliveryDate <= oneWeekFromNow && project.finalMan == "未定"
     ); //今日以降かつ1週間以内
   });
 

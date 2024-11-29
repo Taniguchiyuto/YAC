@@ -65,7 +65,7 @@ const DisplayAndUpdateDatabase = () => {
             ...existingData, // 既存データを保持
             applicationDate: new Date().toISOString(), // 現在の日付を更新
             applicatorID: newApplicatorID, // 重複を防いだ applicatorID
-            status: "pending", // ステータスを更新
+            status: "open", // ステータスを更新
           };
 
           // Firebase データベースを更新
