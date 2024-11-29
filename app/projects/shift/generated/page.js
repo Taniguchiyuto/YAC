@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getAuth } from "firebase/auth";
 import { useRouter } from "next/navigation"; // useRouterをインポート
 import { ref, get, update } from "firebase/database";
 import { database } from "../../../../firebase.js"; // Firebase 初期化済みインスタンス
@@ -11,6 +12,11 @@ export default function ChatPage() {
   const [applications, setApplications] = useState([]);
   const [performances, setPerformances] = useState([]);
   const [projects, setProjects] = useState([]);
+
+  // 初回レンダリング時にデータを取得
+  useEffect(() => {
+    fetchFirebaseData();
+  }, []); // 空依存配列で初回のみ実行
 
   // Firebase からデータを取得する関数
   const fetchFirebaseData = async () => {
@@ -33,6 +39,8 @@ export default function ChatPage() {
             projectID: app.projectID || null,
             applicatorID: app.applicatorID || null,
           }));
+
+        console.log(filteredApplications);
 
         setApplications(filteredApplications);
       } else {
@@ -103,7 +111,34 @@ export default function ChatPage() {
     }
   };
 
+  // 状態が更新された後に適切な処理を実行
+  useEffect(() => {
+    if (
+      applications.length > 0 &&
+      performances.length > 0 &&
+      projects.length > 0
+    ) {
+      handleSubmit();
+    }
+  }, [applications, performances, projects]); // これらの状態が更新されたら実行
+
   const handleSubmit = async () => {
+    //Firebase Authenticationのインスタンスを取得
+    const auth = getAuth();
+    //現在ログイン中のユーザーを取得
+    const currentUser = auth.currentUser;
+    //ユーザーがログインしているか確認
+    if (!currentUser) {
+      console.error("No user is authenticated");
+      return;
+    }
+
+    //ログイン中のユーザーのUIDをコンソールに出力
+    console.log("Authenticated user UID", currentUser.uid);
+
+    //ユーザーのメールアドレスをコンソールに出力(オプション)
+    console.log("Authenticated user email;", currentUser.email);
+
     const userInput = `
 以下のデータを基にプロジェクト担当を調整してください。結果は次の形式で返してください：
 {
@@ -184,11 +219,7 @@ export default function ChatPage() {
   };
 
   // ページがレンダリングされたら `handleSubmit` を実行
-  useEffect(() => {
-    fetchFirebaseData().then(() => {
-      handleSubmit(); // データ取得後にhandleSubmitを実行
-    });
-  }, []); // 空依存配列で1回のみ実行
+  // 空依存配列で1回のみ実行
 
   return (
     <div>
