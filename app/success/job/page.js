@@ -60,7 +60,7 @@ export default function CreateNewProject() {
         applicatorID: "",
         nickName: "",
         projectID: newProjectID,
-        status: "pending",
+        status: "open",
       };
 
       const newProjectRef = ref(database, `applications/${newProjectID}`);

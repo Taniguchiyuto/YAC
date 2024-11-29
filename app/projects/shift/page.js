@@ -104,14 +104,21 @@ export default function ActiveProjectsPage() {
   const oneWeekFromNow = new Date();
   oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
   const today = new Date(); // 今日の日付を取得
-
+  //1週間以内のもので、かつprojectの担当者が未定のもののみ抽出
   const projectsWithinOneWeek = projects.filter((project) => {
     const deliveryDate = new Date(project.deliveryDate); //deliveryDateをDataオブジェクトに変換
-    return deliveryDate >= today && deliveryDate <= oneWeekFromNow; //今日以降かつ1週間以内
+    return (
+      // deliveryDate >= today &&
+      deliveryDate <= oneWeekFromNow && project.finalMan == "未定"
+    ); //今日以降かつ1週間以内
   });
 
+  //今週
+
   const projectsBeyondOneWeek = projects.filter(
-    (project) => new Date(project.deliveryDate) > oneWeekFromNow
+    (project) =>
+      new Date(project.deliveryDate) > oneWeekFromNow && //締切が1週間以上先
+      project.finalMan === "未定" ///　担当者が未定
   );
 
   return (
@@ -159,7 +166,7 @@ export default function ActiveProjectsPage() {
               <h3 style={{ margin: "0 0 10px" }}>{project.title || "N/A"}</h3>
               <p>
                 <strong>プロジェクトID:</strong> {project.projectID} <br />
-                <strong>締切:</strong>{" "}
+                <strong>素材提供予定日:</strong>{" "}
                 {new Date(project.deliveryDate).toLocaleString() || "N/A"}{" "}
                 <br />
                 <strong>担当者:</strong> {project.finalMan || "N/A"} <br />
