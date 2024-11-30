@@ -20,6 +20,11 @@ try {
       process.env.SERVICE_ACCOUNT_AUTH_PROVIDER_CERT_URL,
     client_x509_cert_url: process.env.SERVICE_ACCOUNT_CLIENT_CERT_URL,
   };
+  if (!process.env.SERVICE_ACCOUNT_PRIVATE_KEY) {
+    throw new Error(
+      "SERVICE_ACCOUNT_PRIVATE_KEY is not set in environment variables."
+    );
+  }
 
   // Firebase Admin SDK の初期化
   if (!admin.apps.length) {
