@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import { useRouter } from "next/navigation"; // useRouterをインポート
 import { ref, get, update } from "firebase/database";
-import { database } from "../../../firebase.js"; // Firebase 初期化済みインスタンス
+import { database } from "../../../../firebase.js"; // Firebase 初期化済みインスタンス
 
 export default function ChatPage() {
   const router = useRouter(); // useRouterの初期化
