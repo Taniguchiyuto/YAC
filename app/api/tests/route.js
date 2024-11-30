@@ -6,7 +6,7 @@ import path from "path";
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(
-      JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) // 環境変数から JSON をパース
+      require(path.resolve("config/service-account.json")) // 環境変数から JSON をパース
     ),
   });
 }

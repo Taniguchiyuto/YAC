@@ -1,10 +1,10 @@
 import admin from "firebase-admin";
-
+import path from "path";
 // Firebase Admin SDK の初期化
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(
-      JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) // 環境変数から JSON をパース
+      require(path.resolve("config/service-account.json")) // 環境変数から JSON をパース
     ),
   });
 }
