@@ -1,14 +1,38 @@
 import { google } from "googleapis";
 import admin from "firebase-admin";
-import path from "path";
+import { config } from "dotenv";
 
-// Firebase Admin SDK の初期化
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(
-      JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) // 環境変数から JSON をパース
-    ),
-  });
+// .env ファイルを読み込む
+config();
+
+try {
+  // 環境変数からサービスアカウント情報を構築
+  const serviceAccount = {
+    type: process.env.SERVICE_ACCOUNT_TYPE,
+    project_id: process.env.SERVICE_ACCOUNT_PROJECT_ID,
+    private_key_id: process.env.SERVICE_ACCOUNT_PRIVATE_KEY_ID,
+    private_key: process.env.SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, "\n"), // 改行文字を正しい形式に変換
+    client_email: process.env.SERVICE_ACCOUNT_CLIENT_EMAIL,
+    client_id: process.env.SERVICE_ACCOUNT_CLIENT_ID,
+    auth_uri: process.env.SERVICE_ACCOUNT_AUTH_URI,
+    token_uri: process.env.SERVICE_ACCOUNT_TOKEN_URI,
+    auth_provider_x509_cert_url:
+      process.env.SERVICE_ACCOUNT_AUTH_PROVIDER_CERT_URL,
+    client_x509_cert_url: process.env.SERVICE_ACCOUNT_CLIENT_CERT_URL,
+  };
+
+  // Firebase Admin SDK の初期化
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+    console.log("Firebase Admin SDK Initialized with Environment Variables");
+  }
+} catch (error) {
+  console.error("Error initializing Firebase Admin SDK:", error);
+  throw new Error(
+    "Failed to initialize Firebase Admin SDK. Check your environment variables."
+  );
 }
 
 // Gmail API の OAuth2 クライアント設定
@@ -48,7 +72,7 @@ export async function POST(req) {
       `To: ${email}`,
       `Subject: ${subject}`,
       ``,
-      `${body}`,
+      `${emailBody}`,
     ].join("\n");
 
     const encodedMessage = Buffer.from(message)

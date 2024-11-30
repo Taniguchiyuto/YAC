@@ -1,10 +1,10 @@
-"use client";
+"use client"; // クライアントサイドコンポーネントとして指定
 
 import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import { useRouter } from "next/navigation"; // useRouterをインポート
 import { ref, get, update } from "firebase/database";
-import { database } from "../../../../firebase.js"; // Firebase 初期化済みインスタンス
+import { database } from "../../../firebase.js"; // Firebase 初期化済みインスタンス
 
 export default function ChatPage() {
   const router = useRouter(); // useRouterの初期化
@@ -12,7 +12,7 @@ export default function ChatPage() {
   const [applications, setApplications] = useState([]);
   const [performances, setPerformances] = useState([]);
   const [projects, setProjects] = useState([]);
-  // 関数の存在を確認
+  const [isSubmitted, setIsSubmitted] = useState(false); // handleSubmitが呼ばれたかどうかを追跡するフラグ
 
   // 初回レンダリング時にデータを取得
   useEffect(() => {
@@ -39,25 +39,19 @@ export default function ChatPage() {
         );
         const filteredApplications = rawApplications
           .filter((app) => {
-            // 募集日を Date オブジェクトに変換
             const applicationDate = new Date(app.applicationDate);
-
-            // すべての条件を AND で結合して return
             return (
               app.status === "open" && // status が "open"
               app.applicatorID !== null && // applicatorID が null ではない
-              app.applicatorID.trim() !== "" && //空文字列または空白文字列だけを除外
+              app.applicatorID.trim() !== "" && // 空文字列または空白文字列だけを除外
               applicationDate <= oneWeekLater // 募集日が1週間以内
             );
           })
-
           .map((app) => ({
             applicationID: app.id,
             projectID: app.projectID || null,
             applicatorID: app.applicatorID || null,
           }));
-
-        console.log(filteredApplications);
 
         setApplications(filteredApplications);
       } else {
@@ -74,21 +68,16 @@ export default function ChatPage() {
           })
         );
 
-        const filteredperformances = rawperformances
-          // .filter((app) => {
-          //   ///statusがopen
-          //   return app.status === open;
-          // })
-          .map((app) => ({
-            id: app.id,
-            performances_duecheck: app.dueCheck,
-            performances_editorID: app.editorID,
-            performances_genre: app.genre,
-            performances_likeRate: app.likeRate + "%",
-            performances_review: app.review + "回再生",
-            performances_title: app.title,
-            performances_editorName: app.nickName || null,
-          }));
+        const filteredperformances = rawperformances.map((app) => ({
+          id: app.id,
+          performances_duecheck: app.dueCheck,
+          performances_editorID: app.editorID,
+          performances_genre: app.genre,
+          performances_likeRate: app.likeRate + "%",
+          performances_review: app.review + "回再生",
+          performances_title: app.title,
+          performances_editorName: app.nickName || null,
+        }));
 
         setPerformances(filteredperformances);
       } else {
@@ -108,13 +97,11 @@ export default function ChatPage() {
 
         const today = new Date();
 
-        //Projectをfilterにかけて、statusがopen
         const filteredProjects = rawProjects
           .filter((proj) => {
             if (!proj.deliveryDate) return false;
             const deliveryDate = new Date(proj.deliveryDate);
             return (
-              // deliveryDate >= today &&
               deliveryDate <=
                 new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) &&
               proj.status == "open"
@@ -141,28 +128,23 @@ export default function ChatPage() {
     if (
       applications.length > 0 &&
       performances.length > 0 &&
-      projects.length > 0
+      projects.length > 0 &&
+      !isSubmitted
     ) {
       handleSubmit();
     }
-  }, [applications, performances, projects]); // これらの状態が更新されたら実行
+  }, [applications, performances, projects, isSubmitted]); // 依存配列にisSubmittedを追加
 
   const handleSubmit = async () => {
-    //Firebase Authenticationのインスタンスを取得
+    setIsSubmitted(true); // handleSubmitを実行したことをフラグで管理
     const auth = getAuth();
-    //現在ログイン中のユーザーを取得
     const currentUser = auth.currentUser;
-    //ユーザーがログインしているか確認
     if (!currentUser) {
       console.error("No user is authenticated");
       return;
     }
 
-    //ログイン中のユーザーのUIDをコンソールに出力
     console.log("Authenticated user UID", currentUser.uid);
-
-    //ユーザーのメールアドレスをコンソールに出力(オプション)
-    console.log("Authenticated user email;", currentUser.email);
 
     const userInput = `
 以下のデータを基にプロジェクト担当を調整してください。結果は次の形式で返してください：
@@ -190,8 +172,6 @@ export default function ChatPage() {
 
       let data = await res.json();
 
-      console.log("Received raw data:", data);
-
       let parsedMessage;
       if (data.message) {
         try {
@@ -211,80 +191,59 @@ export default function ChatPage() {
         console.log("Assignments data received:", parsedMessage.assignments);
 
         const updates = {};
-        parsedMessage.assignments.forEach(
-          async ({ projectID, editorID }, index) => {
-            if (projectID && editorID) {
-              updates[`projects/${projectID}/finalMan`] = editorID;
-              updates[`projects/${projectID}/status`] = "closed";
-              updates[`applications/${projectID}/status`] = "closed";
+        parsedMessage.assignments.forEach(async ({ projectID, editorID }) => {
+          if (projectID && editorID) {
+            updates[`projects/${projectID}/finalMan`] = editorID;
+            updates[`projects/${projectID}/status`] = "closed";
+            updates[`applications/${projectID}/status`] = "closed";
 
-              try {
-                // APIを呼び出してメールアドレスを取得
-                console.log("editorID:", editorID); // 確認用
+            const res = await fetch("/api/test", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ uid: editorID }),
+            });
 
-                const res = await fetch("/api/test", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ uid: editorID }), // UIDを渡す
-                });
+            if (!res.ok) {
+              throw new Error(`ユーザー情報取得に失敗しました: ${res.status}`);
+            }
 
-                if (!res.ok) {
-                  throw new Error(
-                    `ユーザー情報取得に失敗しました: ${res.status}`
-                  );
-                }
+            const data = await res.json();
+            const email = data.email;
 
-                const data = await res.json();
-                console.log(data);
-                const email = data.email;
+            if (email) {
+              const mailResponse = await fetch("/api/tests", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  email: email,
+                  subject: `Project Assignment: ${projectID}`,
+                  body: `You have been assigned to project ID: ${projectID}. Please check the system for further details.`,
+                }),
+              });
 
-                if (email) {
-                  // メール送信
-                  const mailResponse = await fetch("/api/tests", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      email: email,
-                      subject: `Project Assignment: ${projectID}`,
-                      body: `You have been assigned to project ID: ${projectID}. Please check the system for further details.`,
-                    }),
-                  });
-
-                  if (mailResponse.ok) {
-                    console.log(`メールを送信しました: ${email}`);
-                  } else {
-                    console.error(
-                      `メール送信に失敗しました: ${email}`,
-                      await mailResponse.text()
-                    );
-                  }
-                } else {
-                  console.error(
-                    `UID: ${editorID} に対応するメールアドレスが見つかりません`
-                  );
-                }
-              } catch (error) {
+              if (mailResponse.ok) {
+                console.log(`メールを送信しました: ${email}`);
+              } else {
                 console.error(
-                  `UID: ${editorID} の処理中にエラーが発生しました:`,
-                  error
+                  `メール送信に失敗しました: ${email}`,
+                  await mailResponse.text()
                 );
               }
             } else {
-              console.error(`データが不足しています: ${index + 1}`, {
-                projectID,
-                editorID,
-              });
+              console.error(
+                `UID: ${editorID} に対応するメールアドレスが見つかりません`
+              );
             }
+          } else {
+            console.error(`データが不足しています`);
           }
-        );
+        });
 
         const databaseRef = ref(database);
         await update(databaseRef, updates);
 
-        console.log("Projects successfully updated in Firebase:", updates);
-
         setResponse("Assignments processed and database updated successfully");
-        router.push("/success"); // 成功したら "/success" ページにリダイレクト
+        router.push("/success");
       } else {
         console.error(
           "Assignments data not found in parsed message:",
@@ -297,9 +256,6 @@ export default function ChatPage() {
       setResponse("Error occurred while processing");
     }
   };
-
-  // ページがレンダリングされたら `handleSubmit` を実行
-  // 空依存配列で1回のみ実行
 
   return (
     <div>

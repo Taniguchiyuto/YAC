@@ -6,14 +6,14 @@ import { getAnalytics } from "firebase/analytics";
 
 // Firebase の設定情報
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  apiKey: "AIzaSyC47A8SyQ13KUakMVXZfS5UWNzeqJUZLmY",
+  authDomain: "gpt-shift.firebaseapp.com",
+  databaseURL: "https://gpt-shift-default-rtdb.firebaseio.com",
+  projectId: "gpt-shift",
+  storageBucket: "gpt-shift.firebasestorage.app",
+  messagingSenderId: "261117513911",
+  appId: "1:261117513911:web:7ca6e0d897dc40fedb7d32",
+  measurementId: "G-2HSV0JS958",
 };
 
 // 既存の Firebase App インスタンスがあるか確認
