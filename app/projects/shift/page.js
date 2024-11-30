@@ -204,7 +204,7 @@ export default function ChatPage() {
             });
 
             if (!res.ok) {
-              throw new Error(`ユーザー情報取得に失敗しました: ${res.status}`);
+              throw new Error(`ユーザー情報取得に失敗しました!: ${res.status}`);
             }
 
             const data = await res.json();
