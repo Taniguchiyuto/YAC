@@ -1,12 +1,23 @@
-import { google } from "googleapis";
-import admin from "firebase-admin";
-import serviceAccount from "../../../firebase-admin-key.json"; // Firebase関連のファイルをインポート
 import { config } from "dotenv";
 
 // .env ファイルを読み込む
 config();
 
+import { google } from "googleapis";
+import admin from "firebase-admin";
+
 try {
+  // FIREBASE_SERVICE_ACCOUNT を JSON パースし、\\n を \n に変換
+  let serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  if (serviceAccount.private_key) {
+    serviceAccount.private_key = serviceAccount.private_key.replace(
+      /\\n/g,
+      "\n"
+    );
+  }
+
+  console.log("FIREBASE_SERVICE_ACCOUNT loaded successfully.");
+
   // Firebase Admin SDK 初期化
   if (!admin.apps.length) {
     admin.initializeApp({
@@ -17,7 +28,7 @@ try {
 } catch (error) {
   console.error("Error initializing Firebase Admin SDK:", error);
   throw new Error(
-    "Failed to initialize Firebase Admin SDK. Check your service account file."
+    "Failed to initialize Firebase Admin SDK. Check your service account file or environment variable."
   );
 }
 

@@ -1,17 +1,35 @@
 import admin from "firebase-admin";
-import serviceAccount from "../../../firebase-admin-key.json"; // 相対パス
+import { config } from "dotenv";
+
+// 環境変数を読み込む
+config();
 
 try {
+  // Firebase Service Account を環境変数から読み込む
+  let serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
+  // private_key 内の \\n を \n に変換
+  if (serviceAccount.private_key) {
+    serviceAccount.private_key = serviceAccount.private_key.replace(
+      /\\n/g,
+      "\n"
+    );
+  }
+
   // Firebase Admin SDK 初期化
   if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
-    console.log("Firebase Admin SDK Initialized using serviceAccount file");
+    console.log(
+      "Firebase Admin SDK Initialized using serviceAccount from environment variable"
+    );
   }
 } catch (error) {
   console.error("Error initializing Firebase Admin SDK:", error);
-  throw new Error("Failed to initialize Firebase Admin SDK.");
+  throw new Error(
+    "Failed to initialize Firebase Admin SDK. Check your environment variable."
+  );
 }
 
 export async function POST(req) {
