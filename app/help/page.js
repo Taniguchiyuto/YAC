@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth"; // Firebase 認証の取得
 import { ref, get, remove } from "firebase/database";
-import { database } from "../../../firebase.js";
+import { database } from "../../firebase.js";
 import { useRouter } from "next/navigation"; // 追加
 import { MutatingDots } from "react-loader-spinner";
 
@@ -83,7 +83,7 @@ export default function ActiveProjectsPage() {
   }, []);
 
   const handleDelete = async (projectID) => {
-    if (window.confirm("このプロジェクトを削除しますか？")) {
+    if (window.confirm("パフォーマンスを入力しますか？")) {
       try {
         // Firebaseからプロジェクトを削除
         const projectRef = ref(database, `projects/${projectID}`);

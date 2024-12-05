@@ -6,6 +6,7 @@ import { auth } from "../../firebase";
 import { ref, get } from "firebase/database"; //データ取得に必要
 import { database } from "../../firebase.js";
 import { useRouter } from "next/navigation";
+import { MutatingDots } from "react-loader-spinner";
 export default function Dashboard() {
   const [user, setUser] = useState(null); //ユーザー情報を格納
   const [editorExists, setEditorExists] = useState(false); //UIDが存在するかどうかを確認
@@ -41,24 +42,32 @@ export default function Dashboard() {
     });
     return () => unsubscribe();
   }, []);
-  if (loading) {
-    return <p>Loading...</p>; //ローディング中の表示
-  }
+  // if (loading) {
+  //   return <p>Loading...</p>; //ローディング中の表示
+  // }
   return (
-    <div>
-      <h1>ダッシュボード</h1>
-      {user ? (
-        <div>
-          <p>ログインUID: {user.uid}</p> {/* UIDを表示 */}
-          {editorExists ? (
-            <p>データベースに一致するUIDが見つかりました。</p>
-          ) : (
-            <p>一致するUIDがデータベースに存在しません。</p>
-          )}
-        </div>
-      ) : (
-        <p>ログインしていません。</p> //未ログインの場合
-      )}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh", //画面全体の高さを確保
+      }}
+    >
+      {/* <h1>ダッシュボード</h1> */}
+      {/*ローディングアニメーションを常に表示 */}
+      <MutatingDots
+        height={100}
+        width={100}
+        color="#4fa94d"
+        secondaryColor="f2a900"
+        radius={12.5}
+        ariaLabel="loading"
+        wrapperStyle={{ margin: "20px 0" }}
+        wrapperClass=""
+        visible={true}
+      />
     </div>
   );
 }
