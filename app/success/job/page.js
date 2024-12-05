@@ -2,8 +2,10 @@
 
 import React, { useState } from "react";
 import { ref, get, set } from "firebase/database";
+import { getAuth } from "firebase/auth";
 import { database } from "../../../firebase.js";
 import { useRouter } from "next/navigation";
+import { Oval } from "react-loader-spinner"; //ローディングアニメーション用コンポーネント
 
 export default function CreateNewProject() {
   const [title, setTitle] = useState("");
@@ -14,11 +16,15 @@ export default function CreateNewProject() {
   const [reward, setReward] = useState("");
   const [bonus, setBonus] = useState("");
   const [status, setStatus] = useState("open"); // デフォルト値
+  const [loading, setLoading] = useState(false); //ローディング状態を追加
   const goToActiveProjects = () => {
     router.push("/projects/active"); // 遷移先を指定
   };
   const goToShiftPage = () => {
     router.push("/projects/shift"); // 遷移先を指定
+  };
+  const goToHelpPage = () => {
+    router.push("/help");
   };
   const router = useRouter(); // 修正済み
   const goToMainPage = () => {
@@ -27,13 +33,20 @@ export default function CreateNewProject() {
   };
 
   const combinedSubmitHandler = async (e) => {
-    e.preventDefault(); // ページのリロードを防ぐ
+    e.preventDefault(); //ページのリロードを防ぐ
+    setLoading(true);
+    //UIDを取得してコンソールに表示
 
-    // 他の関数を呼び出す
-    handleSubmit();
-
-    // 既存の handleSubmit を呼び出す
-    await createNewApplication(e);
+    try {
+      await handleSubmit(); //非同期処理1
+      await createNewApplication(); //非同期処理2
+      alert("新しいプロジェクトが作成されました！");
+    } catch (error) {
+      console.error("エラーが発生しました", error);
+      alert("プロジェクトの作成に失敗しました");
+    } finally {
+      setLoading(false); //ローディング終了
+    }
   };
 
   const createNewApplication = async (e) => {
@@ -71,6 +84,19 @@ export default function CreateNewProject() {
   };
   const handleSubmit = async (e) => {
     try {
+      const auth = getAuth(); // Firebase Authentication インスタンス
+      const user = auth.currentUser; // 現在のユーザーを取得
+      let uid = null;
+
+      if (user) {
+        uid = user.uid;
+        console.log("現在のUID:", uid);
+      } else {
+        console.log("ユーザーはログインしていません");
+        throw new Error(
+          "ログインしていないユーザーはプロジェクトを作成できません"
+        );
+      }
       // Firebaseのプロジェクトリファレンス
       const projectsRef = ref(database, "projects");
       const snapshot = await get(projectsRef);
@@ -98,6 +124,7 @@ export default function CreateNewProject() {
         status,
         bonus: parseInt(bonus),
         projectID: newProjectID,
+        Planner: uid,
       };
 
       // Firebaseにプロジェクトデータを保存
@@ -143,6 +170,33 @@ export default function CreateNewProject() {
         overflow: "hidden", // 全体で余分なスクロールを防止
       }}
     >
+      {/* ローディングオーバーレイ */}
+      {loading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.5)", //半透明の背景
+            display: "flex",
+            justifyContent: "center",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000, //他の要素より前面に表示
+          }}
+        >
+          <Oval
+            strokeWidth={5}
+            height={80}
+            ariaLabel="loading"
+            color="white"
+            secondaryColor="gray"
+          />
+        </div>
+      )}
       {/* サイドバー */}
       <div
         className="sidebar"
@@ -209,6 +263,7 @@ export default function CreateNewProject() {
                 color: "#fff",
                 textDecoration: "none",
               }}
+              onClick={goToHelpPage} //新しい関数を割り当て
             >
               ヘルプ
             </a>

@@ -5,7 +5,7 @@ import { getAuth } from "firebase/auth";
 import { useRouter } from "next/navigation"; // useRouterをインポート
 import { ref, get, update } from "firebase/database";
 import { database } from "../../../firebase.js"; // Firebase 初期化済みインスタンス
-
+import { MutatingDots } from "react-loader-spinner";
 export default function ChatPage() {
   const router = useRouter(); // useRouterの初期化
   const [response, setResponse] = useState("");
@@ -258,40 +258,24 @@ export default function ChatPage() {
   };
 
   return (
-    <div>
-      <h1>Chat with GPT</h1>
-
-      <p>Response: {response}</p>
-
-      <h2>Applications Data</h2>
-      <ul>
-        {applications.map((app) => (
-          <li key={app.applicationID}>
-            <strong>Project ID:</strong> {app.projectID} <br />
-            <strong>Applicator ID:</strong> {app.applicatorID}
-          </li>
-        ))}
-      </ul>
-
-      <h2>Performances Data</h2>
-      <ul>
-        {performances.map((perf) => (
-          <li key={perf.id}>
-            <strong>ID:</strong> {perf.id} <br />
-            <strong>Data:</strong> {JSON.stringify(perf, null, 2)}
-          </li>
-        ))}
-      </ul>
-
-      <h2>Projects Data</h2>
-      <ul>
-        {projects.map((proj) => (
-          <li key={proj.id}>
-            <strong>ID:</strong> {proj.id} <br />
-            <strong>Data:</strong> {JSON.stringify(proj, null, 2)}
-          </li>
-        ))}
-      </ul>
+    <div
+      style={{
+        display: "flex", //フレックスボックスを有効化
+        justifyContent: "center", //水平方向中央揃え
+        alignItems: "center", //垂直方向中央揃え
+        height: "100vh", //ビューポート全体の高さを確保
+        backgroundColor: "#f9f9f9", //必要に応じて背景色を設定
+      }}
+    >
+      <MutatingDots
+        height={100} //スピナーの高さ
+        width={100} //スピナーの幅
+        color="#4fa94d" //メインの色
+        secondaryColor="#f2a900" //セカンダリー色
+        radius={12.5} //ドットの半径
+        ariaLabel="loading"
+        visible={true} //表示状態を維持
+      />
     </div>
   );
 }

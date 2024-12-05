@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // ページ遷移用のフック
 import { ref, get } from "firebase/database";
 import { database } from "../../firebase.js";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { MutatingDots } from "react-loader-spinner";
+
 import "./page.css";
 
 export default function ProjectDetails() {
+  const [uid, setUid] = useState(null); //UIDを格納
+
   const [projects, setProjects] = useState(null); // プロジェクト情報を格納
   const [loading, setLoading] = useState(true); // ローディング情報
   const [error, setError] = useState(null); // エラー情報
@@ -38,9 +42,25 @@ export default function ProjectDetails() {
     }
   };
 
-  // 初回マウント時にプロジェクト情報を取得
+  // 初回マウント時にプロジェクト情報を取得、そして、uidも取得
   useEffect(() => {
     fetchProjectData();
+    const auth = getAuth(); //Firebase Authインスタンスを取得
+    //ログイン状態を監視してUIDを取得
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUid(user.uid); //UIDを　Reacの状態に保存
+        console.log("ログイン中のUID:", user.uid);
+      } else {
+        console.log("ログインしていません");
+      }
+    });
+    console.log("リスナーが登録されました");
+    //クリーンアップ関数でリスナーを解除
+    return () => {
+      unsubscribe(); //リスナー解除
+      console.log("リスナーが解除されました");
+    };
   }, []);
 
   // モーダルを開く
@@ -97,8 +117,31 @@ export default function ProjectDetails() {
     }
   };
 
-  // ローディング中の表示
-  if (loading) return <p>読み込み中...</p>;
+  // ローディング中の処理
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <MutatingDots
+          height={100}
+          width={100}
+          color="#4fa94d"
+          secondaryColor="#f2a900"
+          radius={12.5}
+          ariaLabel="loading"
+          wrapperStyle={{}}
+          wrapperClass=""
+          visible={true}
+        />
+      </div>
+    );
+  }
 
   // エラー発生時の表示
   if (error) return <p style={{ color: "red" }}>{error}</p>;
