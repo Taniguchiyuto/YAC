@@ -70,7 +70,7 @@ export async function POST(req) {
 
     for (const toEmail of emails) {
       const message = [
-        `From: "Your Project" <youdougukou5@example.com>`,
+        `From: "Your Project!" <youdougukou5@example.com>`,
         `To: ${toEmail}`,
         `Subject: ${subject}`,
         ``,
