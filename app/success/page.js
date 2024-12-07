@@ -22,7 +22,7 @@ export default function ProjectDetails() {
   const [password, setPassword] = useState(""); // 入力されたパスワード
   const [errorMessage, setErrorMessage] = useState(""); // パスワードエラー
   // 正しいパスワード（必要に応じてバックエンド検証に変更可能）
-  const correctPassword = "yac";
+  const correctPassword = "yac3150";
 
   const handlePostJob = () => {
     setIsPasswordModalOpen(true); // パスワードモーダルを開く
