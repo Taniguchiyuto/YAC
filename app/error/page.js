@@ -54,27 +54,115 @@ export default function ErrorPage() {
   };
 
   return (
-    <div>
-      <h1>エラー</h1>
-      <p>一致するデータが見つかりませんでした。</p>
-      <hr />
-      <h2>新しいエディターを追加</h2>
-      {uid ? (
-        <>
-          <p>現在のUID: {uid}</p> {/* UIDを表示 */}
-          <input
-            type="text"
-            placeholder="ニックネームを入力"
-            value={nickName}
-            onChange={(e) => setNickName(e.target.value)} // NickNameを更新
-          />
-          <br />
-          <button onClick={handleAddEditor}>追加</button>
-        </>
-      ) : (
-        <p>ログインしてください。</p>
-      )}
-      {message && <p>{message}</p>} {/* メッセージを表示 */}
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>💐そくしふへようこそ💐</h1>
+        {/* <p style={styles.description}>ニックネームを入力してください！</p> */}
+        <hr style={styles.separator} />
+        <h2 style={styles.subtitle}>ニックネームを入力してください</h2>
+        {uid ? (
+          <>
+            <p style={styles.uid}>
+              現在のUID: <strong>{uid}</strong>
+            </p>
+            <input
+              type="text"
+              placeholder="ニックネームを入力"
+              value={nickName}
+              onChange={(e) => setNickName(e.target.value)}
+              style={styles.input}
+            />
+            <button onClick={handleAddEditor} style={styles.button}>
+              追加
+            </button>
+          </>
+        ) : (
+          <p style={styles.errorText}>ログインしてください。</p>
+        )}
+        {message && <p style={styles.message}>{message}</p>}
+      </div>
     </div>
   );
 }
+
+// CSS-in-JSのスタイル定義
+const styles = {
+  container: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+    backgroundColor: "#f9f9f9",
+    padding: "20px",
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: "10px",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+    padding: "20px",
+    width: "100%",
+    maxWidth: "400px",
+    textAlign: "center",
+  },
+  title: {
+    fontSize: "24px",
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: "10px",
+  },
+  description: {
+    fontSize: "16px",
+    color: "#666",
+    marginBottom: "20px",
+  },
+  separator: {
+    border: "0",
+    height: "1px",
+    backgroundColor: "#ddd",
+    margin: "20px 0",
+  },
+  subtitle: {
+    fontSize: "18px",
+    fontWeight: "bold",
+    color: "#555",
+    marginBottom: "15px",
+  },
+  uid: {
+    fontSize: "14px",
+    color: "#888",
+    marginBottom: "10px",
+  },
+  input: {
+    width: "100%",
+    padding: "10px",
+    marginBottom: "15px",
+    border: "1px solid #ddd",
+    borderRadius: "5px",
+    fontSize: "14px",
+    color: "#333",
+  },
+  button: {
+    width: "100%",
+    padding: "10px",
+    backgroundColor: "#007BFF",
+    color: "#fff",
+    border: "none",
+    borderRadius: "5px",
+    fontSize: "16px",
+    cursor: "pointer",
+    transition: "background-color 0.3s ease",
+  },
+  buttonHover: {
+    backgroundColor: "#0056b3",
+  },
+  errorText: {
+    fontSize: "14px",
+    color: "red",
+    marginTop: "10px",
+  },
+  message: {
+    marginTop: "10px",
+    fontSize: "14px",
+    color: "#28a745",
+  },
+};

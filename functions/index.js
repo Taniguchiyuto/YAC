@@ -1,19 +1,13 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+const functions = require("firebase-functions");
 
-const {onRequest} = require("firebase-functions/v2/https");
-const logger = require("firebase-functions/logger");
+// スケジュールされた関数: 毎日午前0時（UTC）に実行
+exports.dailyTask = functions.pubsub
+    .schedule("0 0 * * *") // cron形式
+    .timeZone("Asia/Tokyo") // 日本時間で実行
+    .onRun((context) => {
+      console.log("1日1回のタスクが実行されました！");
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
-
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+      // 実行するロジック
+      // 例: データベースの更新、APIの呼び出しなど
+      return null;
+    });

@@ -15,7 +15,7 @@ export default function ActiveProjectsPage() {
   const [applicantCounts, setApplicantCounts] = useState({}); // 応募者数を保持
 
   const handleBack = () => {
-    router.push("/success");
+    router.push("/success/job/");
   };
 
   useEffect(() => {
@@ -46,7 +46,9 @@ export default function ActiveProjectsPage() {
               }))
               .filter(
                 (project) =>
-                  project.Planner && project.Planner === currentUser.uid
+                  project.Planner &&
+                  project.Planner === currentUser.uid &&
+                  project.status === "open"
               );
 
             setProjects(matchedProjects); // マッチしたプロジェクトを保存

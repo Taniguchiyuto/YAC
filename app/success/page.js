@@ -18,6 +18,24 @@ export default function ProjectDetails() {
   const [isModalOpen, setIsModalOpen] = useState(false); // モーダル表示状態
   const router = useRouter(); // ページ遷移用のフック
   const [selectedProject, setSelectedProject] = useState(null); // 選択されたプロジェクト
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false); // モーダルの表示状態
+  const [password, setPassword] = useState(""); // 入力されたパスワード
+  const [errorMessage, setErrorMessage] = useState(""); // パスワードエラー
+  // 正しいパスワード（必要に応じてバックエンド検証に変更可能）
+  const correctPassword = "yac";
+
+  const handlePostJob = () => {
+    setIsPasswordModalOpen(true); // パスワードモーダルを開く
+  };
+  const handlePasswordSubmit = () => {
+    if (password === correctPassword) {
+      setErrorMessage("");
+      setIsPasswordModalOpen(false);
+      router.push("/success/job"); // 正しい場合のみ遷移
+    } else {
+      setErrorMessage("パスワードが間違っています"); // エラーメッセージを表示
+    }
+  };
 
   // プロジェクト情報を取得する関数
   const fetchProjectData = async () => {
@@ -146,10 +164,10 @@ export default function ProjectDetails() {
   // エラー発生時の表示
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
-  const handlePostJob = () => {
-    // ボタンを押したときの処理（例: 別ページに遷移）
-    router.push("/success/job"); // 遷移先を変更
-  };
+  // const handlePostJob = () => {
+  //   // ボタンを押したときの処理（例: 別ページに遷移）
+  //   router.push("/success/job"); // 遷移先を変更
+  // };
 
   // プロジェクトデータの表示
   return (
@@ -189,6 +207,83 @@ export default function ProjectDetails() {
           )}
         </div>
       </div>
+      {isPasswordModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 2000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#fff",
+              padding: "20px",
+              borderRadius: "10px",
+              width: "300px",
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            <h2 style={{ marginBottom: "10px", textAlign: "center" }}>
+              パスワードを入力
+            </h2>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "5px",
+                marginBottom: "10px",
+              }}
+              placeholder="パスワードを入力"
+            />
+            <button
+              onClick={handlePasswordSubmit}
+              style={{
+                width: "100%",
+                padding: "10px",
+                backgroundColor: "#007BFF",
+                color: "#fff",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                marginBottom: "10px",
+              }}
+            >
+              確認
+            </button>
+            {errorMessage && (
+              <p style={{ color: "red", textAlign: "center" }}>
+                {errorMessage}
+              </p>
+            )}
+            <button
+              onClick={() => setIsPasswordModalOpen(false)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                backgroundColor: "#6c757d",
+                color: "#fff",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -204,12 +299,10 @@ function ProjectDetailsCard({ project, onClick }) {
       <p>
         <strong>タイトル:</strong> {project.title}
       </p>
-      <p>
+      {/* <p>
         <strong>プロジェクトID:</strong> {project.id}
-      </p>
-      <p>
-        <strong>状態:</strong> {project.status}
-      </p>
+      </p> */}
+      <p>{/* <strong>状態:</strong> {project.status} */}</p>
       <p>
         <strong>締切:</strong> {new Date(project.deadline).toLocaleString()}
       </p>

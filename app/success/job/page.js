@@ -52,6 +52,19 @@ export default function CreateNewProject() {
 
   const createNewApplication = async (e) => {
     try {
+      const auth = getAuth(); // Firebase Authentication インスタンス
+      const user = auth.currentUser; // 現在のユーザーを取得
+      let uid = null;
+
+      if (user) {
+        uid = user.uid;
+        console.log("現在のUID:", uid);
+      } else {
+        console.log("ユーザーはログインしていません");
+        throw new Error(
+          "ログインしていないユーザーはプロジェクトを作成できません"
+        );
+      }
       //Firebaseのプロジェクトリファレンス
       const projectRef = ref(database, "projects");
       const snapshot = await get(projectRef);
@@ -75,6 +88,7 @@ export default function CreateNewProject() {
         nickName: "",
         projectID: newProjectID,
         status: "open",
+        Planner: uid,
       };
 
       const newProjectRef = ref(database, `applications/${newProjectID}`);
@@ -113,13 +127,15 @@ export default function CreateNewProject() {
         const maxID = Math.max(...projectIDs);
         newProjectID = `proj${maxID + 1}`; // 新しいIDを生成
       }
+      // Final Man を固定値 "未定" に設定
+      const fixedFinalMan = "未定";
 
       // ユーザー入力データ
       const userInputData = {
         title,
         deadline: new Date(deadline).toISOString(),
         deliveryDate: new Date(deliveryDate).toISOString(),
-        finalMan,
+        finalMan: fixedFinalMan, // Final Man を固定値に設定
         penalty: parseInt(penalty),
         reward: parseInt(reward),
         status,
@@ -266,7 +282,7 @@ export default function CreateNewProject() {
               }}
               onClick={goToHelpPage} //新しい関数を割り当て
             >
-              ヘルプ
+              実績を反映させる
             </a>
           </li>
         </ul>
@@ -345,7 +361,7 @@ export default function CreateNewProject() {
                 }}
               />
             </div>
-            <div style={{ marginBottom: "15px" }}>
+            {/* <div style={{ marginBottom: "15px" }}>
               <label>担当者 (Final Man):</label>
               <input
                 type="text"
@@ -360,7 +376,7 @@ export default function CreateNewProject() {
                   marginTop: "5px",
                 }}
               />
-            </div>
+            </div> */}
             <div style={{ marginBottom: "15px" }}>
               <label>ペナルティ (Penalty):</label>
               <input

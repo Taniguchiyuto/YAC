@@ -13,6 +13,8 @@ export default function ActiveProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [applicantCounts, setApplicantCounts] = useState({});
+  const [videoGenre, setVideoGenre] = useState(""); // 動画ジャンルの状態を管理
+  const [dueCheck, setDueCheck] = useState(false); // 期限チェックの状態を管理
 
   const [selectedProjectID, setSelectedProjectID] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
@@ -22,7 +24,7 @@ export default function ActiveProjectsPage() {
   const [likeRate, setLikeRate] = useState(null); // いいね率の状態を管理
 
   const handleBack = () => {
-    router.push("/success");
+    router.push("/success/job/");
   };
 
   useEffect(() => {
@@ -99,27 +101,31 @@ export default function ActiveProjectsPage() {
       return;
     }
 
-    const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY; // 環境変数からキーを取得 // 自分のAPIキーを入れてください
-    const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`;
+    const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY; // 環境変数からキーを取得
+    const videoUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`;
+    const categoriesUrl = `https://www.googleapis.com/youtube/v3/videoCategories?part=snippet&regionCode=JP&key=${API_KEY}`;
 
     try {
-      const response = await fetch(url);
-      if (!response.ok) {
+      // 動画情報を取得
+      const videoResponse = await fetch(videoUrl);
+      if (!videoResponse.ok) {
         throw new Error("YouTube APIリクエストが失敗しました");
       }
+      const videoData = await videoResponse.json();
 
-      const data = await response.json();
-      if (data.items.length > 0) {
-        const videoSnippet = data.items[0].snippet;
-        const videoStatistics = data.items[0].statistics;
+      if (videoData.items.length > 0) {
+        const videoSnippet = videoData.items[0].snippet;
+        const videoStatistics = videoData.items[0].statistics;
+        const videoCategoryId = videoSnippet.categoryId;
 
-        const newVideoTitle = videoSnippet.title; // 動画タイトルを取得
-        const newViewCount = parseInt(videoStatistics.viewCount);
-        const newLikeCount = parseInt(videoStatistics.likeCount);
+        // 動画タイトルと統計情報を取得
+        const newVideoTitle = videoSnippet.title;
+        const newViewCount = parseInt(videoStatistics.viewCount, 10);
+        const newLikeCount = parseInt(videoStatistics.likeCount, 10);
 
         setVideoTitle(newVideoTitle);
 
-        // いいね率の計算
+        // いいね率を計算
         if (newViewCount > 0) {
           const calculatedLikeRate = (
             (newLikeCount / newViewCount) *
@@ -130,24 +136,40 @@ export default function ActiveProjectsPage() {
           setLikeRate(0);
         }
 
-        // performances テーブルにいいね率と動画タイトルを更新
+        // ジャンルを取得
+        const categoriesResponse = await fetch(categoriesUrl);
+        if (!categoriesResponse.ok) {
+          throw new Error("YouTubeジャンルの取得に失敗しました");
+        }
+        const categoriesData = await categoriesResponse.json();
+        const category = categoriesData.items.find(
+          (item) => item.id === videoCategoryId
+        );
+        const genreName = category ? category.snippet.title : "不明";
+        setVideoGenre(genreName);
+
+        // Firebaseにデータを更新
         if (selectedProjectID && selectedProject) {
           const performanceRef = ref(
             database,
             `performances/${selectedProjectID}`
           );
 
+          // dueCheck の値を文字列として保存
+          const dueStatus = dueCheck ? "on-time" : "delay";
+
           await update(performanceRef, {
             title: newVideoTitle,
             view: newViewCount, // 再生回数を保存
             likeRate: likeRate,
+            genre: genreName, // ジャンルを保存
+            dueStatus: dueStatus, // 期限の状態を保存
             editorID: selectedProject.finalMan,
           });
 
           alert(
-            "動画タイトル、いいね率、および編集者情報がFirebaseに更新されました。"
+            `動画情報（タイトル、いいね率、ジャンル、期限: ${dueStatus}）がFirebaseに更新されました。`
           );
-
           setYoutubeURL("");
         }
       } else {
@@ -161,12 +183,10 @@ export default function ActiveProjectsPage() {
 
   // 削除ボタンがクリックされたときに呼ばれる関数
   const handleDelete = (projectID) => {
-    if (window.confirm("パフォーマンスを入力しますか？")) {
-      const project = projects.find((proj) => proj.projectID === projectID);
-      setSelectedProjectID(projectID);
-      setSelectedProject(project);
-      setIsModalOpen(true);
-    }
+    const project = projects.find((proj) => proj.projectID === projectID);
+    setSelectedProjectID(projectID);
+    setSelectedProject(project);
+    setIsModalOpen(true);
   };
 
   if (loading) {
@@ -197,7 +217,7 @@ export default function ActiveProjectsPage() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>現在募集中のプロジェクト</h1>
+      <h1>これまでのプロジェクト</h1>
       {projects.length > 0 ? (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
           {projects.map((project, index) => (
@@ -234,7 +254,6 @@ export default function ActiveProjectsPage() {
       ) : (
         <p>現在、募集中のプロジェクトはありません。</p>
       )}
-      {/* 戻るボタン */}
       <button
         onClick={handleBack}
         style={{
@@ -250,7 +269,6 @@ export default function ActiveProjectsPage() {
         戻る
       </button>
 
-      {/* モーダルの実装 */}
       {isModalOpen && (
         <div
           style={{
@@ -276,9 +294,7 @@ export default function ActiveProjectsPage() {
             }}
           >
             <h2>パフォーマンスの入力</h2>
-            <p>このプロジェクトを本当に削除しますか？</p>
 
-            {/* YouTube URL 入力フィールド */}
             <input
               type="text"
               value={youtubeURL}
@@ -300,11 +316,20 @@ export default function ActiveProjectsPage() {
             >
               動画情報を取得
             </button>
-
-            {/* 動画タイトルを表示 */}
             {videoTitle && <p>動画タイトル: {videoTitle}</p>}
-            {/* いいね率を表示 */}
             {likeRate !== null && <p>いいね率: {likeRate}%</p>}
+
+            <div style={{ marginTop: "10px", textAlign: "left" }}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={dueCheck}
+                  onChange={(e) => setDueCheck(e.target.checked)}
+                  style={{ marginRight: "8px" }}
+                />
+                期限を守った
+              </label>
+            </div>
 
             <button
               onClick={() => setIsModalOpen(false)}
@@ -315,6 +340,7 @@ export default function ActiveProjectsPage() {
                 border: "none",
                 borderRadius: "5px",
                 cursor: "pointer",
+                marginTop: "10px",
               }}
             >
               キャンセル
