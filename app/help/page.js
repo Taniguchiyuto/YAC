@@ -52,7 +52,9 @@ export default function ActiveProjectsPage() {
               }))
               .filter(
                 (project) =>
-                  project.Planner && project.Planner === currentUser.uid
+                  project.Planner &&
+                  project.Planner === currentUser.uid &&
+                  project.status === "closed"
               );
 
             setProjects(matchedProjects);
