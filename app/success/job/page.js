@@ -24,6 +24,7 @@ export default function CreateNewProject() {
     router.push("/projects/shift"); // 遷移先を指定
   };
   const goToHelpPage = () => {
+    // router.push("/help");
     router.push("/help");
   };
   const router = useRouter(); // 修正済み
