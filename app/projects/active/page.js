@@ -46,7 +46,9 @@ export default function ActiveProjectsPage() {
               }))
               .filter(
                 (project) =>
-                  project.Planner && project.Planner === currentUser.uid
+                  project.Planner &&
+                  project.Planner === currentUser.uid &&
+                  project.status === "open"
               );
 
             setProjects(matchedProjects); // マッチしたプロジェクトを保存

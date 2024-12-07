@@ -217,7 +217,7 @@ export default function ActiveProjectsPage() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>現在募集中のプロジェクト</h1>
+      <h1>これまでのプロジェクト</h1>
       {projects.length > 0 ? (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
           {projects.map((project, index) => (

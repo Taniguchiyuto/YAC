@@ -19,9 +19,30 @@ export default function ChatPage() {
   // 初回レンダリング時にデータを取得
   // 初回レンダリング時にUIDを取得
   useEffect(() => {
-    fetchFirebaseData();
-  }, []); // 空依存配列で初回のみ実行
+    const fetchUID = () => {
+      const auth = getAuth();
 
+      // 認証状態を監視してUIDを取得
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          console.log("ログイン中のユーザー:", user.uid);
+          setUid(user.uid); // UID を設定
+        } else {
+          console.error("ユーザーはログインしていません");
+          router.push("/login"); // ログインページにリダイレクト
+        }
+      });
+    };
+
+    fetchUID();
+  }, []);
+  // 空依存配列で初回のみ実行
+  // UIDが取得された後にfetchFirebaseDataを実行
+  useEffect(() => {
+    if (uid) {
+      fetchFirebaseData(uid); // UIDを渡してデータ取得
+    }
+  }, [uid]); // uid が変更されたときに実行
   // Firebase からデータを取得する関数
   const fetchFirebaseData = async () => {
     try {
@@ -178,7 +199,7 @@ export default function ChatPage() {
         performances,
         projects,
       };
-
+      // API へプロンプトを送信
       const res = await fetch("/api/generateshift", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -224,6 +245,20 @@ export default function ChatPage() {
 
             const data = await res.json();
             const email = data.email;
+
+            // // Firebase `projects` ノードからタイトルを取得
+            // const projectTitleRef = ref(
+            //   database,
+            //   `projects/${projectID}/title`
+            // ); // projectsノード内の特定プロジェクトのtitleを参照
+            // const projectTitleSnapshot = await get(projectTitleRef); // Firebaseからデータを取得
+            // if (projectTitleSnapshot.exists()) {
+            //   projectTitle = projectTitleSnapshot.val(); // 取得したtitleをprojectTitleに代入
+            // } else {
+            //   console.error(
+            //     `プロジェクトタイトルが見つかりません: ${projectID}`
+            //   ); // titleが存在しない場合のエラーログ
+            // }
 
             if (email) {
               const mailResponse = await fetch("/api/tests", {

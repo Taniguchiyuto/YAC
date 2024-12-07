@@ -45,6 +45,7 @@ export async function POST(req) {
 
   try {
     const userRecord = await admin.auth().getUser(uid);
+    console.log("User Record:", userRecord);
     const email = userRecord.email;
 
     if (!email) {

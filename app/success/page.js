@@ -299,12 +299,10 @@ function ProjectDetailsCard({ project, onClick }) {
       <p>
         <strong>タイトル:</strong> {project.title}
       </p>
-      <p>
+      {/* <p>
         <strong>プロジェクトID:</strong> {project.id}
-      </p>
-      <p>
-        <strong>状態:</strong> {project.status}
-      </p>
+      </p> */}
+      <p>{/* <strong>状態:</strong> {project.status} */}</p>
       <p>
         <strong>締切:</strong> {new Date(project.deadline).toLocaleString()}
       </p>
