@@ -15,7 +15,7 @@ export default function ActiveProjectsPage() {
   const [applicantCounts, setApplicantCounts] = useState({}); // 応募者数を保持
 
   const handleBack = () => {
-    router.push("/success");
+    router.push("/success/job/");
   };
 
   useEffect(() => {

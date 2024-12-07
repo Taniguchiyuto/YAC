@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import { useRouter } from "next/navigation"; // useRouterをインポート
 import { ref, get, update } from "firebase/database";
-import { database } from "../../../../firebase.js"; // Firebase 初期化済みインスタンス
+import { database } from "../../../../../firebase.js"; // Firebase 初期化済みインスタンス
 
 export default function ChatPage() {
   const router = useRouter(); // useRouterの初期化
@@ -13,38 +13,66 @@ export default function ChatPage() {
   const [performances, setPerformances] = useState([]);
   const [projects, setProjects] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false); // handleSubmitが呼ばれたかどうかを追跡するフラグ
+  const [uid, setUid] = useState(null); // 現在ログインしているユーザーのUIDを保存
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
 
+  if (currentUser) {
+    setUid(currentUser.uid);
+    console.log("現在のUID:", currentUser.uid);
+  } else {
+    console.error("ユーザーはログインしていません");
+  }
   // 初回レンダリング時にデータを取得
   useEffect(() => {
     fetchFirebaseData();
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
+      setUid(currentUser.uid);
+      console.log("現在のUID:", currentUser.uid);
+    } else {
+      console.error("ユーザーはログインしていません");
+    }
   }, []); // 空依存配列で初回のみ実行
 
   // Firebase からデータを取得する関数
   const fetchFirebaseData = async () => {
     try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        console.error("ユーザーはログインしていません");
+        throw new Error("ログインが必要です");
+      }
+
+      const uid = currentUser.uid;
+      console.log("現在のUID:", uid);
+
+      // Applications の取得とフィルタリング
       const applicationsRef = ref(database, "applications");
       const applicationsSnapshot = await get(applicationsRef);
 
       if (applicationsSnapshot.exists()) {
         const rawApplications = Object.entries(applicationsSnapshot.val()).map(
-          ([key, value]) => ({
-            id: key,
-            ...value,
-          })
+          ([key, value]) => ({ id: key, ...value })
         );
 
-        const today = new Date(); //今日の日付
+        const today = new Date();
         const oneWeekLater = new Date(
           today.getTime() + 7 * 24 * 60 * 60 * 1000
         );
+
         const filteredApplications = rawApplications
           .filter((app) => {
             const applicationDate = new Date(app.applicationDate);
             return (
-              app.status === "open" && // status が "open"
-              app.applicatorID !== null && // applicatorID が null ではない
-              app.applicatorID.trim() !== "" && // 空文字列または空白文字列だけを除外
-              applicationDate <= oneWeekLater // 募集日が1週間以内
+              app.status === "open" &&
+              app.applicatorID &&
+              app.applicatorID.trim() !== "" &&
+              applicationDate <= oneWeekLater &&
+              app.Planner === uid
             );
           })
           .map((app) => ({
@@ -54,72 +82,77 @@ export default function ChatPage() {
           }));
 
         setApplications(filteredApplications);
+        if (filteredApplications.length === 0) {
+          throw new Error("条件に一致するプロジェクトが見つかりませんでした");
+        }
       } else {
-        setApplications([]);
+        throw new Error("アプリケーションデータが存在しません");
       }
 
+      // Performances の取得と処理
       const performancesRef = ref(database, "performances");
       const performancesSnapshot = await get(performancesRef);
+
       if (performancesSnapshot.exists()) {
-        const rawperformances = Object.entries(performancesSnapshot.val()).map(
-          ([key, value]) => ({
-            id: key,
-            ...value,
-          })
+        const rawPerformances = Object.entries(performancesSnapshot.val()).map(
+          ([key, value]) => ({ id: key, ...value })
         );
 
-        const filteredperformances = rawperformances.map((app) => ({
+        const filteredPerformances = rawPerformances.map((app) => ({
           id: app.id,
           performances_duecheck: app.dueCheck,
           performances_editorID: app.editorID,
           performances_genre: app.genre,
-          performances_likeRate: app.likeRate + "%",
-          performances_review: app.review + "回再生",
+          performances_likeRate: `${app.likeRate}%`,
+          performances_review: `${app.review}回再生`,
           performances_title: app.title,
           performances_editorName: app.nickName || null,
         }));
 
-        setPerformances(filteredperformances);
+        setPerformances(filteredPerformances);
       } else {
         setPerformances([]);
       }
 
+      // Projects の取得と処理
       const projectsRef = ref(database, "projects");
       const projectsSnapshot = await get(projectsRef);
 
       if (projectsSnapshot.exists()) {
         const rawProjects = Object.entries(projectsSnapshot.val()).map(
-          ([key, value]) => ({
-            id: key,
-            ...value,
-          })
+          ([key, value]) => ({ id: key, ...value })
         );
 
         const today = new Date();
+        const oneWeekLater = new Date(
+          today.getTime() + 7 * 24 * 60 * 60 * 1000
+        );
 
         const filteredProjects = rawProjects
           .filter((proj) => {
             if (!proj.deliveryDate) return false;
             const deliveryDate = new Date(proj.deliveryDate);
-            return (
-              deliveryDate <=
-                new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) &&
-              proj.status == "open"
-            );
+            return deliveryDate <= oneWeekLater && proj.status === "open";
           })
           .map((proj) => ({
             id: proj.projectID,
-            deliveryDate: proj.deliveryDate + "(素材提供日)",
+            deliveryDate: `${proj.deliveryDate}(素材提供日)`,
             deadline: proj.deadline,
             title: proj.title,
           }));
 
         setProjects(filteredProjects);
+        if (filteredProjects.length === 0) {
+          console.warn("条件に一致するプロジェクトが見つかりませんでした");
+        }
       } else {
         setProjects([]);
       }
     } catch (error) {
-      console.error("Error fetching data from Firebase:", error);
+      console.error("Error fetching data from Firebase:", error.message);
+      setTimeout(() => {
+        router.push("/error"); // 必要に応じてエラーページにリダイレクト
+      }, 3000);
     }
   };
 

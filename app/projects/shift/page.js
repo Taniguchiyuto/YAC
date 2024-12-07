@@ -1,13 +1,15 @@
 "use client"; // クライアントサイドコンポーネントとして指定
 
 import { useState, useEffect } from "react";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+
 import { useRouter } from "next/navigation"; // useRouterをインポート
 import { ref, get, update } from "firebase/database";
 import { database } from "../../../firebase.js"; // Firebase 初期化済みインスタンス
 import { MutatingDots } from "react-loader-spinner";
 export default function ChatPage() {
   const router = useRouter(); // useRouterの初期化
+  const [uid, setUid] = useState(null); // UID の状態を管理
   const [response, setResponse] = useState("");
   const [applications, setApplications] = useState([]);
   const [performances, setPerformances] = useState([]);
@@ -15,6 +17,7 @@ export default function ChatPage() {
   const [isSubmitted, setIsSubmitted] = useState(false); // handleSubmitが呼ばれたかどうかを追跡するフラグ
 
   // 初回レンダリング時にデータを取得
+  // 初回レンダリング時にUIDを取得
   useEffect(() => {
     fetchFirebaseData();
   }, []); // 空依存配列で初回のみ実行
@@ -22,6 +25,8 @@ export default function ChatPage() {
   // Firebase からデータを取得する関数
   const fetchFirebaseData = async () => {
     try {
+      // Firebase Authentication から現在のユーザーを取得
+      console.log("突破");
       const applicationsRef = ref(database, "applications");
       const applicationsSnapshot = await get(applicationsRef);
 
@@ -54,8 +59,17 @@ export default function ChatPage() {
           }));
 
         setApplications(filteredApplications);
+        console.log("Filtered Applications:", filteredApplications);
+        if (filteredApplications.length === 0) {
+          console.warn("Filtered Applications is empty. Redirecting...");
+          router.push("/success"); // 別のページにリダイレクト
+        } else {
+          setApplications(filteredApplications);
+          console.log("Filtered Applications:", filteredApplications);
+        }
       } else {
         setApplications([]);
+        router.push("/success");
       }
 
       const performancesRef = ref(database, "performances");
@@ -74,7 +88,7 @@ export default function ChatPage() {
           performances_editorID: app.editorID,
           performances_genre: app.genre,
           performances_likeRate: app.likeRate + "%",
-          performances_review: app.review + "回再生",
+          performances_review: app.view + "回再生",
           performances_title: app.title,
           performances_editorName: app.nickName || null,
         }));
@@ -117,6 +131,7 @@ export default function ChatPage() {
         setProjects(filteredProjects);
       } else {
         setProjects([]);
+        router.push("/success");
       }
     } catch (error) {
       console.error("Error fetching data from Firebase:", error);
