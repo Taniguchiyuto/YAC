@@ -77,7 +77,7 @@ export default function CreateNewProject() {
           parseInt(id.replace("proj", ""))
         );
         const maxID = Math.max(...projectIDs);
-        newProjectID = `proj${maxID + 1}`; // 新しいIDを生成
+        newProjectID = `proj${maxID}`; // 新しいIDを生成
       }
       const currentDateTime = new Date().toISOString();
       // userInputData を作成
@@ -116,7 +116,7 @@ export default function CreateNewProject() {
       const projectsRef = ref(database, "projects");
       const snapshot = await get(projectsRef);
 
-      let newProjectID = "proj1"; // 初期値
+      let newProjectID = "proj2"; // 初期値
 
       // プロジェクトIDを生成
       if (snapshot.exists()) {
