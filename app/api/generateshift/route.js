@@ -11,7 +11,7 @@ export async function POST(req) {
     // ChatGPT APIを呼び出す
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const chatResponse = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [{ role: "user", content: formattedPrompt }],
     });
 

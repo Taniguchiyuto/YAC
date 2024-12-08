@@ -105,7 +105,7 @@ export default function ChatPage() {
 
         const filteredperformances = rawperformances.map((app) => ({
           id: app.id,
-          performances_duecheck: app.dueCheck,
+          performances_duecheck: app.dueStatus,
           performances_editorID: app.editorID,
           performances_genre: app.genre,
           performances_likeRate: app.likeRate + "%",
@@ -115,6 +115,7 @@ export default function ChatPage() {
         }));
 
         setPerformances(filteredperformances);
+        console.log(filteredperformances);
       } else {
         setPerformances([]);
       }
@@ -150,6 +151,7 @@ export default function ChatPage() {
           }));
 
         setProjects(filteredProjects);
+        console.log("Filtered Projects:", filteredProjects);
       } else {
         setProjects([]);
         router.push("/success");
@@ -183,7 +185,7 @@ export default function ChatPage() {
     console.log("Authenticated user UID", currentUser.uid);
 
     const userInput = `
-以下のデータを基にプロジェクト担当を調整してください。結果は次の形式で返してください：
+performancesの成績を元に、適切なeditorIDの値をapplicatorIDの中から担当者を選んでください。applicatorIDではないものからは選ばないでください。結果は次の形式で返してください
 {
   "assignments": [
     { "projectID": "proj18", "editorID": "editor1" },
@@ -199,6 +201,7 @@ export default function ChatPage() {
         performances,
         projects,
       };
+      console.log("Promptdata", promptData);
       // API へプロンプトを送信
       const res = await fetch("/api/generateshift", {
         method: "POST",
